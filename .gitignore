@@ -1,0 +1,13 @@
+﻿__pycache__/
+*.pyc
+.venv/
+.venv-1/
+.env
+.vscode/
+.idea/
+*.db
+*.zip
+logs/
+.pytest_cache/
+docker-bin/
+machine.db

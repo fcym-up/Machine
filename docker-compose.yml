@@ -1,0 +1,34 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: machine-postgres
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+  redis:
+    image: redis:7-alpine
+    container_name: machine-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+  neo4j:
+    image: neo4j:5
+    container_name: machine-neo4j
+    restart: unless-stopped
+    environment:
+      NEO4J_AUTH: neo4j/machine123
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    volumes:
+      - neo4j_data:/data
+volumes:
+  postgres_data:
+  neo4j_data:

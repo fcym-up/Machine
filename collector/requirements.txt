@@ -1,0 +1,2 @@
+# Machine Collector — zero external dependencies
+# Uses only Python standard library (ctypes, urllib, json, re)
