@@ -1,45 +1,142 @@
-"""Voice pipeline - builds context for Baidu voice model."""
-from datetime import datetime, timezone
+"""Voice pipeline — recording → VAD → STT → LLM → TTS → playback."""
+import asyncio
+import numpy as np
+from dataclasses import dataclass
 from loguru import logger
-from app.core.database import SessionLocal
-from app.models.event import Event
+from app.services.voice.stt.sensevoice import SenseVoiceSTT
+from app.services.voice.tts.edge_tts import EdgeTTSService
+from app.services.voice.vad.silero_vad import SileroVAD
+from app.core.llm import chat_simple
+
+SYS_PROMPT = "You are Machine, a voice assistant. Reply in Chinese briefly, 1-2 sentences."
 
 
-def _build_instructions() -> str:
-    """Build dynamic context for Baidu voice model."""
-    db = SessionLocal()
+@dataclass
+class PipelineResult:
+    text: str = ""        # STT transcription
+    reply: str = ""       # LLM reply text
+    audio: bytes = b""    # TTS audio bytes
+    error: str = ""       # Error message if any
+
+
+# Lazy-loaded singletons
+_stt: SenseVoiceSTT | None = None
+_tts: EdgeTTSService | None = None
+_vad: SileroVAD | None = None
+
+
+def _get_stt() -> SenseVoiceSTT:
+    global _stt
+    if _stt is None:
+        _stt = SenseVoiceSTT()
+    return _stt
+
+
+def _get_tts() -> EdgeTTSService:
+    global _tts
+    if _tts is None:
+        _tts = EdgeTTSService()
+    return _tts
+
+
+def _get_vad() -> SileroVAD:
+    global _vad
+    if _vad is None:
+        _vad = SileroVAD()
+    return _vad
+
+
+def _auto_gain(audio, target_rms=0.05):
+    """Normalize quiet audio automatically. Adds <0.3ms latency."""
+    rms = float(np.sqrt(np.mean(audio ** 2)))
+    if 0.001 < rms < target_rms * 0.5:
+        gain = min(target_rms / max(rms, 1e-10), 50.0)
+        audio = audio * gain
+        logger.info(f"Auto gain: x{gain:.1f} (RMS {rms:.4f})")
+    return np.clip(audio, -1.0, 1.0)
+
+async def run_pipeline(
+    audio: np.ndarray | bytes,
+    use_vad: bool = True,
+    sample_rate: int = 16000,
+) -> PipelineResult:
+    """Run the full voice pipeline: STT → LLM → TTS.
+    
+    Args:
+        audio: PCM audio (16-bit bytes or float32 numpy array)
+        use_vad: Whether to apply VAD to trim silence
+        sample_rate: Audio sample rate
+    
+    Returns:
+        PipelineResult with transcription, reply, and audio.
+    """
+    r = PipelineResult()
+    
+    # Convert bytes to numpy if needed
+    if isinstance(audio, bytes):
+        raw = np.frombuffer(audio, dtype=np.int16).astype(np.float32) / 32768.0
+    else:
+        raw = audio.astype(np.float32) if audio.dtype != np.float32 else audio
+    
+    if len(raw) == 0:
+        r.error = "Empty audio"
+        return r
+    
+    logger.info(f"Pipeline: {len(raw)} samples ({len(raw)/sample_rate:.1f}s)")
+    
+    # Step 1: VAD — trim silence
+    if use_vad:
+        try:
+            vad = _get_vad()
+            start, end = vad.detect_utterance(raw)
+            if end > start:
+                raw = raw[start:end]
+                logger.info(f"VAD trimmed to {len(raw)} samples ({len(raw)/sample_rate:.1f}s)")
+            else:
+                logger.info("VAD: no speech detected")
+        except Exception as e:
+            logger.warning(f"VAD skipped: {e}")
+    
+    if len(raw) < 160:  # Less than 10ms at 16kHz
+        r.error = "Audio too short after VAD"
+        return r
+    
+    # Auto gain — normalize volume
+    raw = _auto_gain(raw)
+
+    # Step 2: STT — transcribe
     try:
-        parts = []
-        try:
-            from app.algorithms.emotion_engine import get_current_emotion
-            s = get_current_emotion(db)
-            emotion = s.primary_emotion if s and hasattr(s, "primary_emotion") else "平静"
-            parts.append(f"当前情绪: {emotion}")
-        except Exception:
-            parts.append("当前情绪: 平静")
-        try:
-            today = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
-            events = db.query(Event).filter(
-                Event.created_at >= today,
-                Event.event_type.in_(["user-action", "app-open", "app-close", "window-switch"])
-            ).order_by(Event.created_at.desc()).limit(50).all()
-            if events:
-                cats = {}
-                for e in events:
-                    p = e.payload if isinstance(e.payload, dict) else {}
-                    c = p.get("category", p.get("app", "other"))
-                    cats[c] = cats.get(c, 0) + 1
-                top = sorted(cats.items(), key=lambda x: -x[1])[:5]
-                parts.append("今日活动: " + ", ".join(f"{k}x{v}" for k, v in top))
-        except Exception:
-            pass
-        system = (
-            "你是 Machine，长期陪伴用户的个人AI系统。"
-            "性格冷静理性敏锐，语气自然有温度。"
-            "用中文回复，口语化简短适合语音播报。\n"
-        )
-        instructions = system + "\n".join(parts)
-        logger.info(f"Voice instructions built ({len(instructions)} chars)")
-        return instructions
-    finally:
-        db.close()
+        stt = _get_stt()
+        text = stt.transcribe(raw, sample_rate)
+        if not text:
+            r.error = "STT returned empty result"
+            return r
+        r.text = text
+        logger.info(f"STT: {text[:80]}")
+    except Exception as e:
+        r.error = f"STT failed: {e}"
+        logger.error(r.error)
+        return r
+    
+    # Step 3: LLM — generate reply
+    try:
+        reply = await asyncio.to_thread(chat_simple, text, SYS_PROMPT)
+        r.reply = reply or "嗯，我听到了。"
+        logger.info(f"LLM: {r.reply[:80]}")
+    except Exception as e:
+        logger.error(f"LLM failed: {e}")
+        r.reply = "嗯，我听到了。"
+    
+    # Step 4: TTS — synthesize speech
+    try:
+        tts = _get_tts()
+        audio_tts = await tts.run_tts(r.reply)
+        if audio_tts:
+            r.audio = audio_tts
+            logger.info(f"TTS: {len(audio_tts)}b")
+        else:
+            logger.warning("TTS returned empty audio")
+    except Exception as e:
+        logger.error(f"TTS failed: {e}")
+    
+    return r

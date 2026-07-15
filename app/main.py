@@ -1,4 +1,4 @@
-﻿"""FastAPI application entry point.
+"""FastAPI application entry point.
 
 Registers all API routers:
 events, memories, knowledge, intelligence, agents, prediction.
@@ -9,7 +9,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.api.v1.events import router as events_router
@@ -22,12 +22,13 @@ from app.api.v1.profile import router as profile_router
 from app.api.v1.conversation import router as conversation_router
 from app.api.v1.system import router as system_router
 from app.api.v1.emotion import router as emotion_router
-from app.api.v1.voice import router as voice_router
 from app.core.config import settings
 from app.core.database import Base, engine
 from app.core.logger import logger
 from app.core.security import verify_api_key
-import app.models  # noqa: F401
+import app.models
+from app.voice_ws_v2 import router as voice_router_v2
+from app.voice_ws import router as voice_router
 
 RATE_LIMIT_REQUESTS = 100
 RATE_LIMIT_WINDOW = 60
@@ -78,11 +79,18 @@ app.include_router(prediction_router, prefix=settings.API_PREFIX, dependencies=[
 app.include_router(profile_router, prefix=settings.API_PREFIX, dependencies=[Depends(verify_api_key)])
 app.include_router(system_router, prefix=settings.API_PREFIX, dependencies=[Depends(verify_api_key)])
 app.include_router(conversation_router, prefix=settings.API_PREFIX, dependencies=[Depends(verify_api_key)])
-app.include_router(voice_router, prefix=settings.API_PREFIX)
-
 app.include_router(emotion_router, prefix=settings.API_PREFIX, dependencies=[Depends(verify_api_key)])
 
 
 @app.get("/")
 def root():
     return {"status": "Machine is online", "version": settings.APP_VERSION}
+
+
+@app.get("/go")
+async def go_to_dashboard():
+    return RedirectResponse(url="/dashboard/")
+
+
+app.include_router(voice_router)
+app.include_router(voice_router_v2)

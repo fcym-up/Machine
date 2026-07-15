@@ -1,24 +1,14 @@
-"""Conversation message model — persistent multi-turn dialogue history."""
-import uuid
+"""Conversation message model."""
 from datetime import datetime, timezone
-
-from sqlalchemy import Column, String, Text, DateTime
+from sqlalchemy import DateTime, Integer, String, Text
+from sqlalchemy.orm import Mapped, mapped_column
 from app.core.database import Base
-
-
-def _new_uuid() -> str:
-    return str(uuid.uuid4())
-
 
 class ConversationMessage(Base):
     __tablename__ = "conversation_messages"
-
-    id = Column(String(36), primary_key=True, default=_new_uuid)
-    session_id = Column(String(64), nullable=False, default="default", index=True)
-    role = Column(String(16), nullable=False)  # user / assistant / system
-    content = Column(Text, nullable=False)
-    created_at = Column(
-        DateTime(timezone=True),
-        nullable=False,
-        default=lambda: datetime.now(timezone.utc),
-    )
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    session_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    role: Mapped[str] = mapped_column(String(16), nullable=False)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    msg_type: Mapped[str] = mapped_column(String(20), default="chat")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)

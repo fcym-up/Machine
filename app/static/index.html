@@ -1,120 +1,404 @@
-﻿ <!DOCTYPE html>
- <html lang="zh-CN">
- <head>
-   <meta charset="UTF-8">
-   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <title>Machine</title>
-   <link rel="preconnect" href="https://fonts.googleapis.com">
-   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400&display=swap" rel="stylesheet">
-   <link rel="stylesheet" href="css/style.css?ts=1783603798">
-   <link rel="stylesheet" href="css/animations.css?ts=1783603798">
- </head>
- <body>
-   <script type="importmap">
-   {
-     "imports": {
-       "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js"
-     }
-   }
-   </script>
- 
-   <div id="three-container"></div>
- 
-   <div id="app-layout">
-     <div id="left-panel">
-      <!-- Online Status -->
-      <div id="status-online" class="status-item">
+<!DOCTYPE html></!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Machine 核心界面 // 监控终端</title>
+  <link rel="icon" href="/dashboard/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@200;300;400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js"
+    }
+  }
+  </script>
+
+  <div class="corner-tl"></div><div class="corner-tr"></div>
+  <div class="corner-bl"></div><div class="corner-br"></div>
+
+  <div id="status-bar">
+    <span id="status-bar-left">核心监控 v2.4 // 监控模式</span>
+    <span id="status-bar-right">机密 // 仅限授权人员</span>
+  </div>
+
+  <div id="three-container"></div>
+
+  <div id="app-layout">
+    <div id="left-panel">
+      <div id="camera-grid">
+        <div class="cam-feed" data-cam="CAM-01">
+          <div class="cam-noise"></div>
+          <div class="cam-scanline"></div>
+          <span class="cam-label">CAM-01</span>
+          <div class="cam-corner tl"></div>
+          <div class="cam-corner tr"></div>
+          <div class="cam-corner bl"></div>
+          <div class="cam-corner br"></div>
+          <div class="cam-inner"><div class="cam-placeholder">LIVE</div></div>
+        </div>
+        <div class="cam-feed" data-cam="CAM-02">
+          <div class="cam-noise"></div>
+          <div class="cam-scanline"></div>
+          <span class="cam-label">CAM-02</span>
+          <div class="cam-corner tl"></div>
+          <div class="cam-corner tr"></div>
+          <div class="cam-corner bl"></div>
+          <div class="cam-corner br"></div>
+          <div class="cam-inner"><div class="cam-placeholder">LIVE</div></div>
+        </div>
+        <div class="cam-feed" data-cam="CAM-03">
+          <div class="cam-noise"></div>
+          <div class="cam-scanline"></div>
+          <span class="cam-label">CAM-03</span>
+          <div class="cam-corner tl"></div>
+          <div class="cam-corner tr"></div>
+          <div class="cam-corner bl"></div>
+          <div class="cam-corner br"></div>
+          <div class="cam-inner"><div class="cam-placeholder">LIVE</div></div>
+        </div>
+        <div class="cam-feed" data-cam="CAM-04">
+          <div class="cam-noise"></div>
+          <div class="cam-scanline"></div>
+          <span class="cam-label">CAM-04</span>
+          <div class="cam-corner tl"></div>
+          <div class="cam-corner tr"></div>
+          <div class="cam-corner bl"></div>
+          <div class="cam-corner br"></div>
+          <div class="cam-inner"><div class="cam-placeholder">LIVE</div></div>
+        </div>
+      </div>
+      <div id="scan-status">
+        <div class="scan-row"><span class="scan-label">扫描状态</span><span class="scan-value">运行中</span></div>
+        <div class="scan-row"><span class="scan-label">覆盖率</span><span class="scan-value">73.4%</span></div>
+        <div class="scan-row"><span class="scan-label">上次扫描</span><span class="scan-value">0.3s</span></div>
+        <div class="scan-bar-outer"><div class="scan-bar-inner"></div></div>
+      </div>
+      <div id="terminal-stream">
+        <div id="term-lines"></div>
+      </div>
+      <div id="status-online">
         <span class="dot-green"></span>
-        <span id="status-text" class="status-value">Online</span>
+        <span id="status-text" class="observe-value">系统在线</span>
       </div>
-
-      <!-- Observe Section -->
       <div id="observe-section">
-        <div class="section-label">Observe</div>
-        <div class="observe-row">
-          <span class="observe-label">当前行为</span>
-          <span id="current-activity" class="observe-value">--</span>
+        <div class="panel-header">观察记录</div>
+        <div class="observe-row"><span class="observe-label">当前行为</span><span id="current-activity" class="observe-value">--</span></div>
+        <div class="observe-row"><span class="observe-label">专注度</span><span id="focus-level" class="observe-value">--</span></div>
+        <div class="observe-row"><span class="observe-label">今日专注</span><span id="today-session" class="observe-value">--</span></div>
+        <div class="observe-row"><span class="observe-label">当前阶段</span><span id="current-phase" class="observe-value">--</span></div>
+      </div>
+      <div id="voice-section">
+        <div class="panel-header">语音连接</div>
+        <div id="voice-status-text" class="voice-status">待命</div>
+        <div id="voice-hint" class="voice-hint">说 "终端"</div>
+      </div>
+    </div>
+    <div id="center-stage">
+      <div id="view-voice" class="view-panel active">
+        <div id="core-overlay">
+          <h1 id="core-title">Machine</h1>
+          <p id="core-subtitle">我一直都在。</p>
+          <p id="core-hint">说 "终端"</p>
+          <div id="analyzing-list"></div>
+          <div id="core-response" class="cursor-blink"></div>
         </div>
-        <div class="observe-row">
-          <span class="observe-label">专注度</span>
-          <span id="focus-level" class="observe-value">--</span>
+      </div>
+      <div id="view-observation" class="view-panel">
+        <div class="view-content">
+          <div class="panel-header">详细观察数据</div>
+          <div class="view-row"><span class="view-label">当前行为</span><span id="obs-activity" class="view-val">--</span></div>
+          <div class="view-row"><span class="view-label">专注度</span><span id="obs-focus" class="view-val">--</span></div>
+          <div class="view-row"><span class="view-label">今日专注</span><span id="obs-session" class="view-val">--</span></div>
+          <div class="view-row"><span class="view-label">当前阶段</span><span id="obs-phase" class="view-val">--</span></div>
+          <div id="obs-extra" class="view-extra"></div>
         </div>
-        <div class="observe-row">
-          <span class="observe-label">今日专注</span>
-          <span id="today-session" class="observe-value">--</span>
+      </div>
+      <div id="view-memory" class="view-panel">
+        <div class="view-content">
+          <div class="panel-header">记忆库</div>
+          <div class="view-hint">数据加载中...</div>
         </div>
-        <div class="observe-row">
-          <span class="observe-label">当前阶段</span>
-          <span id="current-phase" class="observe-value">--</span>
+      </div>
+      <div id="view-knowledge" class="view-panel">
+        <div class="view-content">
+          <div class="panel-header">知识图谱</div>
+          <div class="view-hint">数据加载中...</div>
+        </div>
+      </div>
+      <div id="view-tasks" class="view-panel">
+        <div class="view-content">
+          <div class="panel-header">任务列表</div>
+          <div class="view-hint">数据加载中...</div>
+        </div>
+      </div>
+      <div id="view-settings" class="view-panel">
+        <div class="view-content">
+          <div class="panel-header">系统设置</div>
+          <div class="view-row"><span class="view-label">API 状态</span><span class="view-val">运行中</span></div>
+          <div class="view-row"><span class="view-label">数据库</span><span class="view-val">已连接</span></div>
+          <div class="view-row"><span class="view-label">语音引擎</span><span class="view-val">就绪</span></div>
+        </div>
+      </div>
+    </div>
+    <div id="timeline-panel">
+      <div id="threat-panel">
+        <div class="threat-header">威胁评估</div>
+        <div class="threat-gauge">
+          <div id="threat-level-label" class="threat-level low">LOW</div>
+          <div class="threat-bar"><div id="threat-bar-inner" class="threat-bar-inner low"></div></div>
+        </div>
+        <div class="threat-stats">
+          <div class="threat-stat ts-safe"><span class="ts-label">安全</span><span class="ts-value">94</span></div>
+          <div class="threat-stat ts-warning"><span class="ts-label">关注</span><span class="ts-value">12</span></div>
+          <div class="threat-stat ts-critical"><span class="ts-label">威胁</span><span id="threat-count" class="ts-value">3</span></div>
+          <div class="threat-stat"><span class="ts-label">已处理</span><span class="ts-value">1,247</span></div>
+        </div>
+      </div>
+      <div id="poi-panel">
+        <div class="panel-header">关注人物</div>
+              <div id="poi-panel">
+        <div class="panel-header">关注人物</div>
+        <div id="poi-list">
+          <div class="poi-card">
+            <div class="poi-threat risk-low"></div>
+            <div class="poi-info"><div class="poi-name">Person-4719</div><div class="poi-id">检索中...</div></div>
+            <div class="poi-status">追踪中</div>
+          </div>
+          <div class="poi-card">
+            <div class="poi-threat risk-moderate"></div>
+            <div class="poi-info"><div class="poi-name">Event-8823</div><div class="poi-id">日常模式匹配</div></div>
+            <div class="poi-status">监控中</div>
+          </div>
+          <div class="poi-card">
+            <div class="poi-threat risk-high"></div>
+            <div class="poi-info"><div class="poi-name">Anomaly-014</div><div class="poi-id">异常行为标记</div></div>
+            <div class="poi-status">高风险</div>
+          </div>
         </div>
       </div>
 
-      <!-- Voice Status Section -->
-      <div id="voice-section">
-      <div class="section-label">Voice Status</div>
-      <div id="voice-status-text" class="voice-status">唤醒词模式</div>
-      <div id="voice-hint" class="voice-hint">说 "终端"</div>
-        </div>
+      </div>
+      <div id="connection-network">
+        <canvas id="conn-canvas"></canvas>
+      </div>
+      <div id="timeline-header">Machine 的思考</div>
+      <div id="timeline-list"></div>
+      <div id="understanding-panel">
+        <div id="understanding-body"></div>
+      </div>
     </div>
+  </div>
 
-    <div id="center-stage">
-       <div id="core-overlay">
-         <h1 id="core-title">Machine</h1>
-         <p id="core-subtitle">我一直都在。</p>
-         <p id="core-hint">说 "终端"</p>
-         <div id="analyzing-list"></div>
-         <div id="core-response"></div>
-       </div>
-     </div>
- 
-     <div id="timeline-panel">
-       <div id="timeline-header">Timeline</div>
-       <div id="timeline-list"></div>
-       <div id="understanding-panel">
-         <div id="understanding-body"></div>
-       </div>
-     </div>
-   </div>
- 
-   <div id="dock">
-     <div class="dock-item active" data-view="voice" title="Voice">
-       <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
-       <span class="dock-dot"></span>
-     </div>
-     <div class="dock-item" data-view="observation" title="Observation">
-       <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-       <span class="dock-dot"></span>
-     </div>
-     <div class="dock-item" data-view="memory" title="Memory">
-       <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-       <span class="dock-dot"></span>
-     </div>
-     <div class="dock-item" data-view="knowledge" title="Knowledge">
-       <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/><path d="M9 9.5V8a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.5"/></svg>
-       <span class="dock-dot"></span>
-     </div>
-     
-    <div class="dock-item" data-view="tasks" title="Tasks">
+  <div id="scan-beam-text">[ 扫描波形 ]</div>
+  <div id="terminal-bar">
+    <div class="term-bar-item"><span class="term-bar-label">扫描</span><span id="tb-scan" class="term-bar-value">0.3s</span></div>
+    <div class="term-bar-divider"></div>
+    <div class="term-bar-item"><span class="term-bar-label">威胁</span><span id="tb-threat" class="term-bar-value">3</span></div>
+    <div class="term-bar-divider"></div>
+    <div class="term-bar-item"><span class="term-bar-label">实体</span><span id="tb-entities" class="term-bar-value">128</span></div>
+    <div class="term-bar-divider"></div>
+    <div class="term-bar-item"><span class="term-bar-label">事件</span><span id="tb-events" class="term-bar-value">47</span></div>
+    <div class="term-bar-divider"></div>
+    <div class="term-bar-item blink"><span class="term-bar-label">状态</span><span id="tb-status" class="term-bar-value">运行中</span></div>
+    <div class="term-bar-divider"></div>
+  </div>
+
+  
+  <div id="modal-overlay">
+    <div id="modal-panel">
+      <div id="modal-header">
+        <span id="modal-title"></span>
+        <span id="modal-close">[X]</span>
+      </div>
+      <div id="modal-body">
+        <div id="modal-view-observation" class="modal-view">
+        <div class="modal-grid">
+          <div class="modal-card">
+            <div class="mc-header">当前状态</div>
+            <div class="mc-body">
+              <div class="m-row"><span class="m-label">当前行为</span><span id="m-obs-activity" class="m-val">--</span></div>
+              <div class="m-row"><span class="m-label">专注度</span><span id="m-obs-focus" class="m-val">--</span></div>
+              <div class="m-row"><span class="m-label">今日专注</span><span id="m-obs-session" class="m-val">--</span></div>
+              <div class="m-row"><span class="m-label">当前阶段</span><span id="m-obs-phase" class="m-val">--</span></div>
+              <div class="m-row"><span class="m-label">情绪状态</span><span id="m-obs-emotion" class="m-val">--</span></div>
+              <div class="m-row"><span class="m-label">事件分析</span><span id="m-obs-events" class="m-val">--</span></div>
+            </div>
+          </div>
+          <div class="modal-card">
+            <div class="mc-header">活跃度分布</div>
+            <div class="mc-body">
+              <div class="m-bar-label">工作 <span class="m-bar-pct">65%</span></div>
+              <div class="m-bar"><div class="m-bar-inner"></div></div>
+              <div class="m-bar-label">学习 <span class="m-bar-pct">20%</span></div>
+              <div class="m-bar"><div class="m-bar-inner"></div></div>
+              <div class="m-bar-label">休息 <span class="m-bar-pct">15%</span></div>
+              <div class="m-bar"><div class="m-bar-inner"></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-card full-width">
+          <div class="mc-header">最近行为时间线</div>
+          <div class="mc-body" id="m-obs-timeline">
+            <div class="m-tl-row"><span class="m-tl-time">--:--</span><span class="m-tl-desc">等待数据...</span><span class="m-tl-focus">--</span></div>
+          </div>
+        </div>
+        </div>
+        <div id="modal-view-memory" class="modal-view">
+        <div class="modal-tabs">
+          <span class="modal-tab active">短期记忆</span>
+          <span class="modal-tab">工作记忆</span>
+          <span class="modal-tab">长期记忆</span>
+          <span class="modal-tab">重要事件</span>
+        </div>
+        <div class="modal-card full-width">
+          <div class="mc-header">记忆层级占用</div>
+          <div class="mc-body">
+            <div class="m-bar-label">短期 <span class="m-bar-pct">8/10</span></div>
+            <div class="m-bar"><div class="m-bar-inner" style="width:80%"></div></div>
+            <div class="m-bar-label">工作 <span class="m-bar-pct">6/10</span></div>
+            <div class="m-bar"><div class="m-bar-inner" style="width:60%"></div></div>
+            <div class="m-bar-label">长期 <span class="m-bar-pct">4/10</span></div>
+            <div class="m-bar"><div class="m-bar-inner" style="width:40%"></div></div>
+          </div>
+        </div>
+        <div class="modal-card full-width">
+          <div class="mc-header">最近记忆</div>
+          <div class="mc-body" id="m-memory-list">
+            <div class="m-tl-row"><span class="m-tl-time">--:--</span><span class="m-tl-desc">等待记忆数据...</span><span class="m-tl-focus">--</span></div>
+          </div>
+        </div>
+        </div>
+        <div id="modal-view-knowledge" class="modal-view">
+        <div class="modal-grid">
+          <div class="modal-card">
+            <div class="mc-header">实体概览</div>
+            <div class="mc-body" id="m-knowledge-entities">
+              <div class="k-node">Machine <span class="k-tag">核心</span></div>
+              <div class="k-node">前端界面 <span class="k-tag">关联</span></div>
+              <div class="k-node">Python <span class="k-tag">技术栈</span></div>
+              <div class="k-node">Three.js <span class="k-tag">依赖</span></div>
+              <div class="k-node">语音识别 <span class="k-tag">功能</span></div>
+              <div class="k-node">情感引擎 <span class="k-tag">子系统</span></div>
+            </div>
+          </div>
+          <div class="modal-card">
+            <div class="mc-header">统计</div>
+            <div class="mc-body">
+              <div class="m-row"><span class="m-label">实体总数</span><span id="m-knowledge-count" class="m-val">--</span></div>
+              <div class="m-row"><span class="m-label">关系数量</span><span id="m-knowledge-rels" class="m-val">--</span></div>
+              <div class="m-row"><span class="m-label">最新实体</span><span id="m-knowledge-latest" class="m-val">--</span></div>
+              <div class="m-row"><span class="m-label">知识完整度</span><span class="m-val">87%</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-card full-width">
+          <div class="mc-header">实体关联图谱</div>
+          <div class="mc-body m-conn-wrap">
+            <canvas id="m-conn-canvas"></canvas>
+          </div>
+        </div>
+        </div>
+        <div id="modal-view-tasks" class="modal-view">
+        <div class="modal-grid">
+          <div class="modal-card">
+            <div class="mc-header">威胁评估</div>
+            <div class="mc-body">
+              <div class="threat-gauge" style="margin-bottom:8px">
+                <div id="m-threat-label" class="threat-level low" style="font-size:18px">LOW</div>
+                <div class="threat-bar"><div id="m-threat-bar" class="threat-bar-inner low" style="width:15%"></div></div>
+              </div>
+              <div class="m-row"><span class="m-label">异常事件</span><span id="m-anomaly-count" class="m-val">--</span></div>
+              <div class="m-row"><span class="m-label">预测趋势</span><span id="m-prediction" class="m-val">--</span></div>
+              <div class="m-row"><span class="m-label">风险等级</span><span id="m-risk-level" class="m-val">--</span></div>
+            </div>
+          </div>
+          <div class="modal-card">
+            <div class="mc-header">分析建议</div>
+            <div class="mc-body" id="m-suggestions">
+              <div class="m-suggest-item">> 加载分析数据...</div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-card full-width">
+          <div class="mc-header">异常检测报告</div>
+          <div class="mc-body" id="m-anomaly-list">
+            <div class="m-tl-row"><span class="m-tl-time">--:--</span><span class="m-tl-desc">等待异常数据...</span><span class="m-tl-focus">--</span></div>
+          </div>
+        </div>
+        </div>
+        <div id="modal-view-settings" class="modal-view">
+        <div class="modal-grid">
+          <div class="modal-card">
+            <div class="mc-header">服务状态</div>
+            <div class="mc-body" id="m-sys-status">
+              <div class="m-row"><span class="m-label">API 服务器</span><span class="m-val dot-green-text">运行中</span></div>
+              <div class="m-row"><span class="m-label">数据库</span><span class="m-val dot-green-text">已连接</span></div>
+              <div class="m-row"><span class="m-label">语音引擎</span><span class="m-val dot-green-text">就绪</span></div>
+              <div class="m-row"><span class="m-label">记忆系统</span><span class="m-val dot-green-text">运行中</span></div>
+              <div class="m-row"><span class="m-label">知识图谱</span><span class="m-val dot-green-text">运行中</span></div>
+              <div class="m-row"><span class="m-label">调度器</span><span class="m-val dot-green-text">活跃</span></div>
+            </div>
+          </div>
+          <div class="modal-card">
+            <div class="mc-header">系统信息</div>
+            <div class="mc-body">
+              <div class="m-row"><span class="m-label">运行时间</span><span class="m-val">12h 34m</span></div>
+              <div class="m-row"><span class="m-label">处理事件</span><span class="m-val">1,247</span></div>
+              <div class="m-row"><span class="m-label">活跃代理</span><span class="m-val">4/6</span></div>
+              <div class="m-row"><span class="m-label">API 版本</span><span class="m-val">v1</span></div>
+              <div class="m-row"><span class="m-label">应用版本</span><span class="m-val">0.1.0</span></div>
+              <div class="m-row"><span class="m-label">缓存</span><span class="m-val">45 MB</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-card full-width">
+          <div class="mc-header">活跃代理</div>
+          <div class="mc-body" id="m-agent-list">
+            <div class="m-tl-row"><span class="m-tl-desc">加载代理状态...</span></div>
+          </div>
+        </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+<div id="dock">
+    <div class="dock-item active" data-view="voice" title="语音界面">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+      <span class="dock-dot"></span>
+    </div>
+    <div class="dock-item" data-view="observation" title="观察数据">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+      <span class="dock-dot"></span>
+    </div>
+    <div class="dock-item" data-view="memory" title="记忆库">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      <span class="dock-dot"></span>
+    </div>
+    <div class="dock-item" data-view="knowledge" title="知识图谱">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/><path d="M9 9.5V8a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.5"/></svg>
+      <span class="dock-dot"></span>
+    </div>
+    <div class="dock-item" data-view="tasks" title="任务列表">
       <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
       <span class="dock-dot"></span>
     </div>
-    <div class="dock-item" data-view="settings" title="Settings">
-       <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-       <span class="dock-dot"></span>
-     </div>
-   </div>
- 
-   <script src="assets/icons.js?ts=1783585467"></script>
-   <script type="module" src="js/particle-core.js?ts=1783585467"></script>
-   <script type="module" src="js/voice.js?ts=1783605506"></script>
-    <script type="module" src="js/timeline.js?ts=1783585467"></script>
-   <script type="module" src="js/app.js?ts=1783605506"></script>
- </body>
- </html>
+    <div class="dock-item" data-view="settings" title="系统设置">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <span class="dock-dot"></span>
+    </div>
+  </div>
 
-
-
-
-
-
+  <script type="module" src="js/particle-core.js"></script>
+  <script type="module" src="js/voice.js"></script>
+  <script type="module" src="js/timeline.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

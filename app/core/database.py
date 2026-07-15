@@ -1,15 +1,31 @@
-"""SQLAlchemy 数据库引擎与会话工厂。
+"""SQLAlchemy database engine and session factory.
 
-从 config 的 DATABASE_URL 创建 PostgreSQL 引擎。
-提供 SessionLocal 用于请求级会话。
-Base 是所有 ORM 模型的声明式基类。
+Uses SQLite for local development (auto-fallback from PostgreSQL config).
+Provides SessionLocal for request-level sessions.
+Base is the declarative base class for all ORM models.
 """
+import os
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 from app.core.config import settings
 
-engine = create_engine(settings.DATABASE_URL, echo=False)
+# Use SQLite for local dev if PostgreSQL is not available
+# Try PostgreSQL first; fall back to SQLite if unavailable
+raw_url = settings.DATABASE_URL or "sqlite:///./machine.db"
+if raw_url.startswith("postgresql"):
+    try:
+        from sqlalchemy import exc
+        test_engine = create_engine(raw_url)
+        test_engine.connect().close()
+        engine = create_engine(raw_url, echo=False)
+    except exc.OperationalError:
+        db_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "machine.db")
+        engine = create_engine(f"sqlite:///{db_path}", connect_args={"check_same_thread": False}, echo=False)
+        print("PostgreSQL unavailable, falling back to SQLite")
+else:
+    engine = create_engine(raw_url, connect_args={"check_same_thread": False}, echo=False)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

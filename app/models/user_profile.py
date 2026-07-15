@@ -1,57 +1,56 @@
-﻿"""User profile models — behavior patterns, traits, state, reflections."""
+"""User profile models - behavior patterns, traits, states."""
 from datetime import datetime, timezone
-from sqlalchemy import DateTime, Float, Integer, String, Text, Boolean
-from sqlalchemy.dialects.postgresql import ARRAY, JSONB
+from sqlalchemy import Boolean, DateTime, Float, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 from app.core.database import Base
-
+from app.core.compat import JSONField
 
 class BehaviorPattern(Base):
     __tablename__ = "behavior_patterns"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    pattern_type: Mapped[str] = mapped_column(String(20), nullable=False)  # daily, trigger, anomaly
-    trigger_events: Mapped[dict | None] = mapped_column(JSONB)
-    result_actions: Mapped[dict | None] = mapped_column(JSONB)
-    frequency: Mapped[int] = mapped_column(Integer, default=0)
+    pattern_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    description = mapped_column(Text, nullable=True)
     confidence: Mapped[float] = mapped_column(Float, default=0.5)
-    first_seen: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
-    last_seen: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+    frequency: Mapped[float] = mapped_column(Float, default=0.0)
     active: Mapped[bool] = mapped_column(Boolean, default=True)
-
+    trigger_events = mapped_column(JSONField, nullable=True)
+    result_actions = mapped_column(JSONField, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
 class TraitDimension(Base):
     __tablename__ = "trait_dimensions"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    dimension: Mapped[str] = mapped_column(String(30), unique=True, nullable=False)
+    trait_name: Mapped[str] = mapped_column(String(50), nullable=False, unique=True)
+    dimension: Mapped[str] = mapped_column(String(50), default="")
     current_value: Mapped[float] = mapped_column(Float, default=0.5)
+    score: Mapped[float] = mapped_column(Float, default=0.5)
+    confidence: Mapped[float] = mapped_column(Float, default=0.3)
     trend_direction: Mapped[str] = mapped_column(String(10), default="stable")
-    evidence_events: Mapped[list | None] = mapped_column(JSONB)
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc))
-
+    evidence_events = mapped_column(JSONField, nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
 class UserState(Base):
-    __tablename__ = "user_state"
+    __tablename__ = "user_states"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    emotional_state: Mapped[str] = mapped_column(String(30), default="平静")
+    session_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True, default="default")
+    emotional_state: Mapped[str] = mapped_column(String(20), default="unknown")
+    energy: Mapped[float] = mapped_column(Float, default=0.5)
     energy_level: Mapped[float] = mapped_column(Float, default=0.5)
+    focus: Mapped[float] = mapped_column(Float, default=0.5)
     focus_level: Mapped[float] = mapped_column(Float, default=0.5)
-    active_topics: Mapped[dict | None] = mapped_column(JSONB)
+    social: Mapped[float] = mapped_column(Float, default=0.5)
     social_engagement: Mapped[float] = mapped_column(Float, default=0.5)
-    last_activity_at: Mapped[datetime | None] = mapped_column(DateTime)
-    summary_text: Mapped[str | None] = mapped_column(Text)
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc))
-
+    active_topics = mapped_column(JSONField, nullable=True)
+    last_activity_at = mapped_column(DateTime, nullable=True)
+    summary_text = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
 class SystemReflection(Base):
     __tablename__ = "system_reflections"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    reflection_type: Mapped[str] = mapped_column(String(20), nullable=False)  # daily, hourly, event_triggered
+    ref_type: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
     content: Mapped[str] = mapped_column(Text, nullable=False)
-    emotional_tone: Mapped[str | None] = mapped_column(String(30))
-    key_insights: Mapped[dict | None] = mapped_column(JSONB)
-    related_event_ids: Mapped[list | None] = mapped_column(JSONB)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+    key_insights = mapped_column(JSONField, nullable=True)
+    related_event_ids = mapped_column(JSONField, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
