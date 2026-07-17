@@ -1,6 +1,6 @@
-# Machine Collector Configuration
+﻿# Machine Collector Configuration
 
-API_URL = "http://127.0.0.1:8000/api/v1/events/"
+API_URL = "http://127.0.0.1:8080/api/v1/events/"
 API_KEY = "machine-dev-key-change-me"
 POLL_SEC = 1
 

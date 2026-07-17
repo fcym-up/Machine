@@ -1,4 +1,4 @@
-"""Silero VAD — voice activity detection on GPU."""
+﻿"""Silero VAD 鈥?voice activity detection on GPU."""
 import torch
 import numpy as np
 from loguru import logger
@@ -62,8 +62,8 @@ class SileroVAD:
         elif state["speech_detected"]:
             state["silence_frames"] += 1
         
-        # Consider speech ended after ~1.5 seconds of silence (at 16kHz, ~90 frames of 160 samples)
-        SPEECH_END_FRAMES = 90
+        # Consider speech ended after ~2s of silence (4 frames x 500ms chunks)
+        SPEECH_END_FRAMES = 4
         if state["speech_detected"] and state["silence_frames"] >= SPEECH_END_FRAMES:
             state["speech_detected"] = False
             state["silence_frames"] = 0

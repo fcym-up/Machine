@@ -1,4 +1,4 @@
-"""FastAPI application entry point.
+﻿"""FastAPI application entry point.
 
 Registers all API routers:
 events, memories, knowledge, intelligence, agents, prediction.
@@ -28,7 +28,6 @@ from app.core.logger import logger
 from app.core.security import verify_api_key
 import app.models
 from app.voice_ws_v2 import router as voice_router_v2
-from app.voice_ws import router as voice_router
 
 RATE_LIMIT_REQUESTS = 100
 RATE_LIMIT_WINDOW = 60
@@ -92,5 +91,4 @@ async def go_to_dashboard():
     return RedirectResponse(url="/dashboard/")
 
 
-app.include_router(voice_router)
 app.include_router(voice_router_v2)
