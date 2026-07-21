@@ -1,6 +1,6 @@
 # Project Machine
 
-> **受《疑犯追跀》"The Machine" 启发的个人 AI 系统**
+> **受《疑犯追踪》"The Machine" 启发的个人 AI 系统**
 >
 > v0.5.0 | Python 3.13 | FastAPI | PostgreSQL | SenseVoice | Kokoro TTS
 
@@ -249,8 +249,4 @@ Machine/
 | 前端 | Three.js, 原生 JS |
 | 采集 | Win32 API (ctypes) |
 
----
 
-## License
-
-MIT
